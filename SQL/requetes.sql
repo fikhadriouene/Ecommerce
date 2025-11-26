@@ -70,4 +70,89 @@ JOIN products p ON p.products_id = oi.order_items_products_id
        
 -- 4. Lister toutes les commandes dont le statut est `PAID` ou `SHIPPED`.
 
-select orders_id from orders where orders_status in ('PAID','SHIPPED')
+SELECT orders_id FROM orders WHERE orders_status IN ('PAID','SHIPPED')
+
+-- ========================= Partie 5 – Jointures avancées ==============================    
+-- # 7️⃣ Partie 5 – Jointures avancées
+
+-- 1. Afficher le détail complet de chaque commande avec :
+
+--    * date de commande,
+--    * nom du client,
+--    * liste des produits,
+--    * quantité,
+--    * prix unitaire facturé,
+--    * montant total de la ligne (quantité × prix unitaire).
+
+SELECT o.orders_id,o.orders_date, c.customers_lastname, p.products_name, oi.order_items_quantity,
+    p.products_price, (oi.order_items_quantity * p.products_price ) as line_total_amount
+FROM orders o
+JOIN customers c ON c.customers_id = o.orders_customers_id
+JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+JOIN products p ON p.products_id = oi.order_items_products_id
+group by orders_id,c.customers_lastname,p.products_name, oi.order_items_quantity,
+    p.products_price
+order by o.orders_id ASC
+
+-- 2. Calculer le **montant total de chaque commande** et afficher uniquement :
+
+--    * l’ID de la commande,
+--    * le nom du client,
+--    * le montant total de la commande.
+
+SELECT tmp.orders_id, tmp.customers_lastname, sum(tmp.line_total_amount) as total_amount
+FROM (
+	    SELECT o.orders_id,o.orders_date, c.customers_lastname, p.products_name, oi.order_items_quantity,
+	       p.products_price, (oi.order_items_quantity * p.products_price ) as line_total_amount
+	    FROM orders o
+	    JOIN customers c ON c.customers_id = o.orders_customers_id
+	    JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+	    JOIN products p ON p.products_id = oi.order_items_products_id
+	    group by orders_id,c.customers_lastname,p.products_name, oi.order_items_quantity,
+	        p.products_price
+	    order by o.orders_id ASC
+) AS tmp
+GROUP BY tmp.orders_id, tmp.customers_lastname
+
+-- 3. Afficher les commandes dont le montant total **dépasse 100 €**.
+
+SELECT tmp2.orders_id, tmp2.total_amount
+FROM (
+        SELECT tmp.orders_id, tmp.customers_lastname, sum(tmp.line_total_amount) as total_amount
+        FROM (
+                SELECT o.orders_id,o.orders_date, c.customers_lastname, p.products_name, oi.order_items_quantity,
+                p.products_price, (oi.order_items_quantity * p.products_price ) as line_total_amount
+                FROM orders o
+                JOIN customers c ON c.customers_id = o.orders_customers_id
+                JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+                JOIN products p ON p.products_id = oi.order_items_products_id
+                group by orders_id,c.customers_lastname,p.products_name, oi.order_items_quantity,
+                    p.products_price
+                order by o.orders_id ASC
+        ) AS tmp
+        GROUP BY tmp.orders_id, tmp.customers_lastname
+) AS tmp2
+WHERE tmp2.total_amount > 100
+
+-- 4. Lister les catégories avec leur **chiffre d’affaires total** 
+-- (somme du montant des lignes sur tous les produits de cette catégorie).
+
+-- ---
+SELECT tmp2.categories_name, sum(tmp2.total_amount) as total_CA
+FROM (
+        SELECT tmp.categories_name, tmp.orders_id, tmp.customers_lastname, sum(tmp.line_total_amount) as total_amount
+        FROM (
+                SELECT ca.categories_name,o.orders_id,o.orders_date, c.customers_lastname, p.products_name, oi.order_items_quantity,
+                p.products_price, (oi.order_items_quantity * p.products_price ) as line_total_amount
+                FROM orders o
+                JOIN customers c ON c.customers_id = o.orders_customers_id
+                JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+                JOIN products p ON p.products_id = oi.order_items_products_id
+                JOIN categories ca ON categories_id = p.products_categories_id
+                group by orders_id,c.customers_lastname,p.products_name, oi.order_items_quantity,
+                    p.products_price,ca.categories_name
+
+        ) AS tmp
+        GROUP BY tmp.orders_id, tmp.customers_lastname,tmp.categories_name
+) AS tmp2
+group by tmp2.categories_name
