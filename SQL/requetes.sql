@@ -50,7 +50,8 @@ ON p.products_categories_id = c.categories_id
 
 SELECT o.orders_id, c.customers_firstname || ' ' ||c.customers_lastname
 FROM customers c
-JOIN O
+JOIN orders o
+ON c.customers_id = o.orders_customers_id
 
 -- 3. Lister toutes les lignes de commande avec :
 
@@ -58,4 +59,15 @@ JOIN O
 --    * le nom du produit,
 --    * la quantité,
 --    * le prix unitaire facturé.
+
+
+SELECT c.customers_firstname || ' ' || c.customers_lastname, 
+       p.products_name, order_items_quantity, p.products_price
+FROM customers c
+JOIN orders o ON c.customers_id = o.orders_customers_id
+JOIN order_items oi ON o.orders_id = oi.order_items_orders_id
+JOIN products p ON p.products_id = oi.order_items_products_id
+       
 -- 4. Lister toutes les commandes dont le statut est `PAID` ou `SHIPPED`.
+
+select orders_id from orders where orders_status in ('PAID','SHIPPED')
