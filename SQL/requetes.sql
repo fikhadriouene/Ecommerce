@@ -156,3 +156,82 @@ FROM (
         GROUP BY tmp.orders_id, tmp.customers_lastname,tmp.categories_name
 ) AS tmp2
 group by tmp2.categories_name
+
+
+
+-- # 8️⃣ Partie 6 – Sous-requêtes
+
+-- 1. Lister les produits qui ont été vendus **au moins une fois**.
+
+SELECT p.products_id, p.products_name, oi.order_items_quantity
+FROM products p
+JOIN order_items oi ON p.products_id = oi.order_items_products_id
+WHERE oi.order_items_quantity > 0
+
+
+
+-- 2. Lister les produits qui **n’ont jamais été vendus**.
+
+SELECT products_id, products_name
+FROM products
+WHERE products_id not in (
+
+                            SELECT p.products_id
+                            FROM products p
+                            JOIN order_items oi ON p.products_id = oi.order_items_products_id
+                            WHERE oi.order_items_quantity > 0
+                        )
+
+
+-- 3. Trouver le client qui a **dépensé le plus** (TOP 1 en chiffre d’affaires cumulé).
+
+SELECT tmp.customers_id, tmp.customers_lastname, sum(line_total_amount) as total_CA
+FROM (
+		SELECT c.customers_id, c.customers_lastname, (oi.order_items_quantity * p.products_price ) as line_total_amount
+		FROM customers c
+		JOIN orders o ON c.customers_id = o.orders_customers_id
+		JOIN order_items oi ON o.orders_id = oi.order_items_orders_id
+		JOIN products p ON oi.order_items_products_id = p.products_id
+		GROUP BY c.customers_id,oi.order_items_quantity, p.products_price
+	 ) as tmp
+group by tmp.customers_id,tmp.customers_lastname
+order by total_CA DESC
+LIMIT 1
+
+
+
+
+-- 4. Afficher les **3 produits les plus vendus** en termes de quantité totale.
+
+SELECT p.products_id, p.products_name, sum(oi.order_items_quantity) as total
+FROM products p
+JOIN order_items oi ON p.products_id = oi.order_items_products_id
+WHERE oi.order_items_quantity > 0
+GROUP BY p.products_id,p.products_name
+ORDER BY total DESC
+LIMIT 3
+
+-- 5. Lister les commandes dont le montant total est **strictement supérieur à la moyenne** de toutes les commandes.
+
+SELECT tmp.orders_id, tmp.total_amount
+FROM (
+        SELECT o.orders_id, SUM(oi.order_items_quantity * p.products_price) AS total_amount
+        FROM orders o
+        JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+        JOIN products p ON p.products_id = oi.order_items_products_id
+        GROUP BY o.orders_id
+     ) AS tmp
+
+WHERE tmp.total_amount > (
+        SELECT avg(tmp2.total_amount) as total_amount_avg
+        FROM (
+                SELECT 
+                    o2.orders_id,
+                    SUM(oi2.order_items_quantity * p2.products_price) AS total_amount
+                FROM orders o2
+                JOIN order_items oi2 ON oi2.order_items_orders_id = o2.orders_id
+                JOIN products p2 ON p2.products_id = oi2.order_items_products_id
+                GROUP BY o2.orders_id
+             ) AS tmp2
+     )
+ORDER BY tmp.total_amount DESC;
