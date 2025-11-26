@@ -1,3 +1,6 @@
+-- =========================== Parties 3 - REQUETES SQL DE BASE ================================================
+
+
 -- Lister tous les clients triés par date de création de compte (plus anciens → plus récents).
 
 SELECT * 
@@ -30,3 +33,29 @@ join categories c
 on p.products_categories_id = c.categories_id
 WHERE c.categories_name = 'Électronique'
 GROUP BY p.products_categories_id,p.products_id
+
+
+-- =========================== Partie 4 – Jointures simples ================================================
+
+-- # 6️⃣ Partie 4 – Jointures simples
+
+-- 1. Lister tous les produits avec le nom de leur catégorie.
+
+SELECT p.products_name, c.categories_name
+FROM produits p
+JOIN categories c
+ON p.products_categories_id = c.categories_id 
+
+-- 2. Lister toutes les commandes avec le nom complet du client (prénom + nom).
+
+SELECT o.orders_id, c.customers_firstname || ' ' ||c.customers_lastname
+FROM customers c
+JOIN O
+
+-- 3. Lister toutes les lignes de commande avec :
+
+--    * le nom du client,
+--    * le nom du produit,
+--    * la quantité,
+--    * le prix unitaire facturé.
+-- 4. Lister toutes les commandes dont le statut est `PAID` ou `SHIPPED`.
