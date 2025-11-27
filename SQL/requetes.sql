@@ -406,12 +406,28 @@ LIMIT 5
 
 -- 4. Les produits qui ont généré au total **moins de 10 €** de CA.
 
-
+select p.products_name, sum(oi.order_items_quantity * p.products_price)
+from products p
+JOin order_items oi on order_items_products_id = p.products_id
+group by p.products_name
+having sum(oi.order_items_quantity * p.products_price) < 10
 
 
 
 -- 5. Les clients n’ayant passé **qu’une seule commande**.
 
+select (c.customers_firstname || ' ' || c.customers_lastname) as customer_one_order
+from customers c
+join orders o on c.customers_id = o.orders_customers_id
+group by c.customers_firstname,c.customers_lastname
+having count(o.orders_id) = 1
 
 
 -- 6. Les produits présents dans des commandes **annulées**, avec le montant “perdu”.
+
+select p.products_name as cancelled_product, sum(oi.order_items_quantity * p.products_price) as total_amount_lost
+from products p
+join order_items oi on p.products_id = order_items_products_id
+join orders o on o.orders_id = oi.order_items_orders_id
+where o.orders_status = 'CANCELLED'
+group by p.products_name
