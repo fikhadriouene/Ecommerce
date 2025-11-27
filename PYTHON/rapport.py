@@ -1,4 +1,5 @@
 import psycopg
+from datetime import *
 
 
 
@@ -179,10 +180,17 @@ article_le_plus_cmd = article_le_plus_commande()
 # 5. Chiffre d’affaires par catégorie.
 
 with open("rapport.txt", "w", encoding="UTF-8") as f:
+    #f.write(f"Rapport établi à : {datetime.now(timezone.utc).strftime("%H:%M:%S")}€ \n")
+    f.write(f"Rapport établi le {datetime.now().date()} à {datetime.now().time().strftime("%H:%M:%S")} \n")
+    f.write(f"--------------------------------------\n\n")
     f.write(f"Chiffre d'affaires : {chiffre_affaires_tot}€ \n")
     f.write(f"Panier moyen : {panier_moy}€\n")
     f.write(f"Article le plus commandé  : {article_le_plus_cmd}\n")
-    f.write(f"Top 3 clients par montant dépensé : {les_trois_clients_par_montant()}\n")
-    f.write(f"Chiffre d’affaires par catégorie :\n {chiffre_affaires_par_categorie}\n")
+    f.write(f"Top 3 clients par montant dépensé :\n")
+    for c in top_trois_par_montant :
+        f.write(f" - {c[0]} \n")
     
-     
+    f.write(f"Chiffre d’affaires par catégorie :\n")
+    for cat in chiffre_affaires_par_categorie :
+        f.write(f" - {cat[0]} - Chiffre d'affaires : {cat[1]}€ \n")
+    
