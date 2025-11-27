@@ -1,0 +1,6 @@
+Chiffre d'affaires : 317.49€ 
+Panier moyen : 31.75€
+Article le plus commandé  : Crème hydratante BioSkin
+Top 3 clients par montant dépensé : [('Martin Alice', Decimal('105.97')), ('Garnier Katia', Decimal('59.88')), ('Bernard Chloé', Decimal('44.96'))]
+Chiffre d’affaires par catégorie :
+ [('Jeux & Jouets', Decimal('55.88')), ('Beauté & Santé', Decimal('56.75')), ('Maison & Cuisine', Decimal('29.99')), ('Électronique', Decimal('129.89')), ('Sport & Loisirs', Decimal('44.98'))]
