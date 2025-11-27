@@ -291,20 +291,20 @@ GROUP BY tmp.mois
 
 -- =============================== Partie 8 : Logique Conditionnelle ==================================
 
-# 🔟 Partie 8 – Logique conditionnelle (CASE)
+-- # 🔟 Partie 8 – Logique conditionnelle (CASE)
 
-1. Pour chaque commande, afficher :
+-- 1. Pour chaque commande, afficher :
 
-   * l’ID de la commande,
-   * le client,
-   * la date,
-   * le statut,
-   * une version “lisible” du statut en français via `CASE` :
+--    * l’ID de la commande,
+--    * le client,
+--    * la date,
+--    * le statut,
+--    * une version “lisible” du statut en français via `CASE` :
 
-     * `PAID` → “Payée”
-     * `SHIPPED` → “Expédiée”
-     * `PENDING` → “En attente”
-     * `CANCELLED` → “Annulée”
+--      * `PAID` → “Payée”
+--      * `SHIPPED` → “Expédiée”
+--      * `PENDING` → “En attente”
+--      * `CANCELLED` → “Annulée”
 
 SELECT o.orders_id, c.customers_lastname, o.orders_date,
         CASE o.orders_status
@@ -321,13 +321,13 @@ JOIN customers c ON o.orders_customers_id = c.customers_id
 
 
 
-2. Pour chaque client, calculer le **montant total dépensé** et le classer en segments :
+-- 2. Pour chaque client, calculer le **montant total dépensé** et le classer en segments :
 
-   * `< 100 €`  → “Bronze”
-   * `100–300 €` → “Argent”
-   * `> 300 €`  → “Or”
+--    * `< 100 €`  → “Bronze”
+--    * `100–300 €` → “Argent”
+--    * `> 300 €`  → “Or”
 
-   Afficher : prénom, nom, montant total, segment.
+--    Afficher : prénom, nom, montant total, segment.
 
 SELECT tmp.customers_firstname, tmp.customers_lastname, sum(line_total_amount) as total_CA,
        CASE 
@@ -348,3 +348,67 @@ order by total_CA DESC
 
 
 ---
+
+-- ===================== Partie 9 - Challenge final ============================
+
+-- # 1️⃣1️⃣ Partie 9 – Challenge final
+
+-- Proposer et écrire **5 requêtes d’analyse avancées** supplémentaires parmi, par exemple :
+
+-- 1. Top 5 des clients les plus actifs (nombre de commandes).
+
+SELECT c.customers_firstname || ' ' || c.customers_lastname, count(o.orders_id) AS nb_commandes
+FROM customers c
+JOIN orders o ON c.customers_id = o.orders_id
+ORDER BY nb_commandes DESC
+LIMIT 5
+
+
+-- 2. Top 5 des clients qui ont dépensé le plus (CA total).
+
+SELECT tmp.customers_firstname, tmp.customers_lastname, sum(line_total_amount) as total_CA,
+FROM (
+		SELECT c.customers_id,c.customers_firstname, c.customers_lastname, (oi.order_items_quantity * p.products_price ) as line_total_amount
+		FROM customers c
+		JOIN orders o ON c.customers_id = o.orders_customers_id
+		JOIN order_items oi ON o.orders_id = oi.order_items_orders_id
+		JOIN products p ON oi.order_items_products_id = p.products_id
+		GROUP BY c.customers_id,oi.order_items_quantity, p.products_price
+	 ) as tmp
+group by tmp.customers_id,tmp.customers_lastname,tmp.customers_firstname
+order by total_CA DESC
+LIMIT 5
+
+
+
+-- 3. Les 3 catégories les plus rentables (CA total).
+
+SELECT tmp2.categories_name, sum(tmp2.total_amount) as total_CA
+FROM (
+        SELECT tmp.categories_name, tmp.orders_id, tmp.customers_lastname, sum(tmp.line_total_amount) as total_amount
+        FROM (
+                SELECT ca.categories_name,o.orders_id,o.orders_date, c.customers_lastname, p.products_name, oi.order_items_quantity,
+                p.products_price, (oi.order_items_quantity * p.products_price ) as line_total_amount
+                FROM orders o
+                JOIN customers c ON c.customers_id = o.orders_customers_id
+                JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+                JOIN products p ON p.products_id = oi.order_items_products_id
+                JOIN categories ca ON categories_id = p.products_categories_id
+                group by orders_id,c.customers_lastname,p.products_name, oi.order_items_quantity,
+                    p.products_price,ca.categories_name
+
+        ) AS tmp
+        GROUP BY tmp.orders_id, tmp.customers_lastname,tmp.categories_name
+) AS tmp2
+group by tmp2.categories_name
+ORDER BY total_CA DESC
+LIMIT 5
+
+-- 4. Les produits qui ont généré au total **moins de 10 €** de CA.
+
+
+
+
+
+-- 5. Les clients n’ayant passé **qu’une seule commande**.
+-- 6. Les produits présents dans des commandes **annulées**, avec le montant “perdu”.
