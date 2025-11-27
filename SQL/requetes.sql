@@ -235,3 +235,56 @@ WHERE tmp.total_amount > (
              ) AS tmp2
      )
 ORDER BY tmp.total_amount DESC;
+
+
+-- ====================== Partie 7 : statistique et aggregats =======================
+
+--  9️⃣ Partie 7 – Statistiques & agrégats
+
+-- 1. Calculer le **chiffre d’affaires total** (toutes commandes confondues, hors commandes annulées si souhaité).
+
+SELECT SUM(oi.order_items_quantity * p.products_price) AS total_CA
+FROM orders o
+JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+JOIN products p ON p.products_id = oi.order_items_products_id
+
+
+-- 2. Calculer le **panier moyen** (montant moyen par commande).
+
+SELECT round((tmp.total_CA / tmp.nb_orders)) as panier_moyen
+FROM (
+    SELECT count(o.orders_id) as nb_orders ,SUM(oi.order_items_quantity * p.products_price) AS total_CA
+    FROM orders o
+    JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+    JOIN products p ON p.products_id = oi.order_items_products_id
+) as tmp
+
+-- 3. Calculer la **quantité totale vendue par catégorie**.
+
+
+
+SELECT ca.categories_name, sum(oi.order_items_quantity) as quantite_vendue
+FROM orders o
+JOIN order_items oi ON oi.order_items_orders_id = o.orders_id
+JOIN products p ON p.products_id = oi.order_items_products_id
+JOIN categories ca ON categories_id = p.products_categories_id
+group by categories_id
+
+
+
+-- 4. Calculer le **chiffre d’affaires par mois** (au moins sur les données fournies).
+
+
+
+SELECT tmp.mois, rount(sum(tmp.line_total_amount),2) as CA_mensuel
+FROM (
+
+        SELECT EXTRACT(MONTH FROM o.orders_date) as mois, (oi.order_items_quantity * p.products_price ) as line_total_amount
+        FROM orders o 
+        JOIN order_items oi ON o.orders_id = oi.order_items_orders_id
+        JOIN products p ON p.products_id = oi.order_items_products_id
+        GROUP BY mois,oi.order_items_quantity,p.products_price
+) as tmp
+GROUP BY tmp.mois 
+
+-- 5. Formater les montants pour n’afficher que **deux décimales**.
