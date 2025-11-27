@@ -411,4 +411,7 @@ LIMIT 5
 
 
 -- 5. Les clients n’ayant passé **qu’une seule commande**.
+
+
+
 -- 6. Les produits présents dans des commandes **annulées**, avec le montant “perdu”.
