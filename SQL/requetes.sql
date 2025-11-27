@@ -276,7 +276,7 @@ group by categories_id
 
 
 
-SELECT tmp.mois, rount(sum(tmp.line_total_amount),2) as CA_mensuel
+SELECT tmp.mois, round(sum(tmp.line_total_amount),2) as CA_mensuel
 FROM (
 
         SELECT EXTRACT(MONTH FROM o.orders_date) as mois, (oi.order_items_quantity * p.products_price ) as line_total_amount
@@ -288,3 +288,63 @@ FROM (
 GROUP BY tmp.mois 
 
 -- 5. Formater les montants pour n’afficher que **deux décimales**.
+
+-- =============================== Partie 8 : Logique Conditionnelle ==================================
+
+# 🔟 Partie 8 – Logique conditionnelle (CASE)
+
+1. Pour chaque commande, afficher :
+
+   * l’ID de la commande,
+   * le client,
+   * la date,
+   * le statut,
+   * une version “lisible” du statut en français via `CASE` :
+
+     * `PAID` → “Payée”
+     * `SHIPPED` → “Expédiée”
+     * `PENDING` → “En attente”
+     * `CANCELLED` → “Annulée”
+
+SELECT o.orders_id, c.customers_lastname, o.orders_date,
+        CASE o.orders_status
+        	WHEN 'PAID' THEN 'Payé'
+        	WHEN 'SHIPPED' THEN 'Expédiée'
+        	WHEN 'PENDING' THEN 'En attente'
+        	WHEN 'CANCELLED' THEN 'Annulée'
+		END AS status
+FROM orders o
+JOIN customers c ON o.orders_customers_id = c.customers_id
+
+
+
+
+
+
+2. Pour chaque client, calculer le **montant total dépensé** et le classer en segments :
+
+   * `< 100 €`  → “Bronze”
+   * `100–300 €` → “Argent”
+   * `> 300 €`  → “Or”
+
+   Afficher : prénom, nom, montant total, segment.
+
+SELECT tmp.customers_firstname, tmp.customers_lastname, sum(line_total_amount) as total_CA,
+       CASE 
+        	WHEN sum(line_total_amount) < 100 THEN 'Bronze'
+            WHEN sum(line_total_amount) BETWEEN 100 and 300  THEN 'Argent'
+            WHEN sum(line_total_amount) > 300 THEN 'Or'
+		END AS segment
+FROM (
+		SELECT c.customers_id,c.customers_firstname, c.customers_lastname, (oi.order_items_quantity * p.products_price ) as line_total_amount
+		FROM customers c
+		JOIN orders o ON c.customers_id = o.orders_customers_id
+		JOIN order_items oi ON o.orders_id = oi.order_items_orders_id
+		JOIN products p ON oi.order_items_products_id = p.products_id
+		GROUP BY c.customers_id,oi.order_items_quantity, p.products_price
+	 ) as tmp
+group by tmp.customers_id,tmp.customers_lastname,tmp.customers_firstname
+order by total_CA DESC
+
+
+---

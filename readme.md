@@ -430,6 +430,8 @@ INSERT INTO /* TODO: ex: order_items(order_id, product_id, quantity, unit_price)
      * `PENDING` → “En attente”
      * `CANCELLED` → “Annulée”
 
+
+
 2. Pour chaque client, calculer le **montant total dépensé** et le classer en segments :
 
    * `< 100 €`  → “Bronze”
